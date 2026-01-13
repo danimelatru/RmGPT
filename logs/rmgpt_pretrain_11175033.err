@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/gpfs/workdir/fernandeda/projects/RmGPT/src/training/pretrain.py", line 96, in <module>
+    main()
+  File "/gpfs/workdir/fernandeda/projects/RmGPT/src/training/pretrain.py", line 29, in main
+    loader = DataLoader(
+             ^^^^^^^^^^^
+  File "/gpfs/workdir/fernandeda/conda_envs/moment_env_py311/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 351, in __init__
+    sampler = RandomSampler(dataset, generator=generator)  # type: ignore[arg-type]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/workdir/fernandeda/conda_envs/moment_env_py311/lib/python3.11/site-packages/torch/utils/data/sampler.py", line 107, in __init__
+    raise ValueError("num_samples should be a positive integer "
+ValueError: num_samples should be a positive integer value, but got num_samples=0
