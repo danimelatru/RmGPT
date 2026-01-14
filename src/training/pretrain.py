@@ -1,7 +1,10 @@
 import torch
 from torch.utils.data import DataLoader
 
-# Asegúrate de que las rutas de importación coincidan con tu estructura de carpetas
+from tqdm import tqdm
+from functools import partialmethod
+tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
+
 from src.mymoment.model.moment import MOMENT
 from src.data.industrial_dataset import IndustrialPretrainDataset
 
@@ -17,18 +20,17 @@ def main():
     MASK_RATIO = 0.125  # (1/8) Informational only
 
     # 1. Dataset
-    # Usamos los datasets sustitutos automáticos definidos en IndustrialPretrainDataset
     dataset = IndustrialPretrainDataset(
-        dataset_names=["CWRU", "XJTU-SY", "KAUG17"], 
+        dataset_names=["CWRU", "XJTU-SY", "KAUG17"],
         seq_len=SEQ_LEN,
-        stride=SEQ_LEN, # Ventanas no solapadas para maximizar variedad
+        stride=SEQ_LEN,
         download=True,
     )
     print(f"Dataset loaded. Samples: {len(dataset)}")
 
     loader = DataLoader(
         dataset,
-        batch_size=32, # Ajustar según memoria GPU (RmGPT usa 256)
+        batch_size=32,
         shuffle=True,
         num_workers=4,
         pin_memory=True,
@@ -42,11 +44,11 @@ def main():
             "seq_len": SEQ_LEN,
             "patch_len": PATCH_LEN,
             "patch_stride_len": STRIDE,
-            "transformer_backbone": "google/flan-t5-small", # Cambiar a 'base' si hay GPU de sobra
+            "transformer_backbone": "google/flan-t5-small", # Change to 'base' if there is enough GPU
             "transformer_type": "encoder_only",
             "mask_ratio": MASK_RATIO,
             "device": device,
-            "d_model": 512, # Coincide con RmGPT small
+            "d_model": 512, # Matches with RmGPT small
         }
     ).to(device)
 

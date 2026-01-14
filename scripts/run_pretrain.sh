@@ -2,9 +2,9 @@
 #SBATCH --job-name=rmgpt_pretrain
 #SBATCH --output=logs/rmgpt_pretrain_%j.out
 #SBATCH --error=logs/rmgpt_pretrain_%j.err
-#SBATCH --time=24:00:00
+#SBATCH --time=02:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
 #SBATCH --partition=gpua100
 #SBATCH --gres=gpu:1
@@ -27,6 +27,8 @@ cd "$PROJECT_ROOT"
 MOMENT_ROOT="/gpfs/workdir/fernandeda/projects/moment"
 PHMD_ROOT="/gpfs/workdir/fernandeda/projects/phmd"
 
+export PHMD_DATA="/gpfs/workdir/fernandeda/projects/dataset_storage/.phmd"
+
 # Add ALL paths to PYTHONPATH so Python finds 'src', 'moment' AND 'phmd'
 export PYTHONPATH="$PROJECT_ROOT:$MOMENT_ROOT:$PHMD_ROOT:$PYTHONPATH"
 
@@ -38,6 +40,7 @@ echo "Python Interpreter: $(which python)"
 echo "Project Root: $PROJECT_ROOT"
 echo "Moment Root: $MOMENT_ROOT"
 echo "Phmd Root: $PHMD_ROOT"
+echo "Phmd Data: $PHMD_DATA" 
 echo "PYTHONPATH: $PYTHONPATH"
 echo "----------------------"
 

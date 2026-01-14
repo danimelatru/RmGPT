@@ -1,11 +1,10 @@
 # RmGPT – Industrial Time-Series Pretraining (Simplified Pipeline)
 
-This repository contains a **clean, minimal, and functional implementation** of an RmGPT-style self-supervised pretraining pipeline for industrial time-series data.
+This repository contains a **functional implementation** of an RmGPT-style self-supervised pretraining pipeline for industrial time-series data.
 
 The goal is **not** to reproduce the original RmGPT codebase line by line, but to:
 - Faithfully replicate the **learning objective** described in the paper
 - Keep the codebase **simple, inspectable, and extensible**
-- Avoid unnecessary abstractions, legacy code, or unused features
 
 ---
 
