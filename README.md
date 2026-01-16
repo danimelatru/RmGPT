@@ -94,10 +94,12 @@ python scripts/evaluate.py
 
 **Experiment:** CWRU Fault Diagnosis (14 Classes)
 
--   Pre-training loss converged to \~0.005
--   Fine-tuning accuracy:
+![Confusion Matrix](assets/confusion_matrix.png)
+
+-   **Pre-training loss:** Converged to ~0.005
+-   **Fine-tuning accuracy:**
     -   Train: 100.00%
-    -   Validation: \~98.3%
+    -   Validation: ~98.3%
 
 The model successfully distinguishes between normal states, inner race,
 ball, and outer race faults across different severities (0.007", 0.014",
