@@ -9,7 +9,7 @@ from tqdm import tqdm
 # --- CONFIGURATION ---
 PROJECT_DIR = "/gpfs/workdir/fernandeda/projects/dataset_storage"
 RAW_ZIPS_DIR = os.path.join(PROJECT_DIR, "raw_zips")
-OUTPUT_DIR = os.path.join(PROJECT_DIR, "processed_data") # Changed name to reflect change in strategy
+OUTPUT_DIR = os.path.join(PROJECT_DIR, "processed_data")
 
 # RmGPT Parameters
 SEQ_LEN = 2048

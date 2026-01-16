@@ -1,154 +1,111 @@
-# RmGPT – Industrial Time-Series Pretraining (Simplified Pipeline)
+# RmGPT: Foundation Model for Rotating Machinery Diagnosis
 
-This repository contains a **functional implementation** of an RmGPT-style self-supervised pretraining pipeline for industrial time-series data.
+## Project Overview
 
-The goal is **not** to reproduce the original RmGPT codebase line by line, but to:
-- Faithfully replicate the **learning objective** described in the paper
-- Keep the codebase **simple, inspectable, and extensible**
+This project implements and reproduces the **RmGPT** (Rotating Machinery
+Generative Pre-trained Transformer) framework. It is designed to learn
+general physical representations of machinery vibrations through
+**Self-Supervised Learning (SSL)** and apply them to downstream tasks
+like **Fault Diagnosis** via **Supervised Fine-Tuning**.
 
----
+**Key Features:** - **Foundation Model:** Uses a Transformer backbone
+(MOMENT) pre-trained on diverse industrial datasets. - **Masked Signal
+Modeling:** Learns physics by reconstructing masked patches of vibration
+signals. - **High Performance:** Achieved **\>98% accuracy** on the CWRU
+dataset (14-class fault diagnosis) using the reproduced pipeline.
 
-## 1. What this project does
+## Project Structure
 
-This project implements **Next Signal Token (Patch) Prediction** for industrial time-series data:
-
-- A long signal is split into **non-overlapping windows**
-- Each window is split into **fixed-length patches**
-- The **last patch is masked**
-- The model is trained to **reconstruct only that last patch** using the preceding patches as context
-
-This matches the self-supervised objective described in the RmGPT paper.
-
----
-
-## 2. Current project structure
-
-```text
+``` text
 RmGPT/
+├── checkpoints/       # Saved models (.pth)
+├── dataset_storage/   # Processed .npy data
+├── logs/              # SLURM execution logs
+├── raw_zips/          # Raw datasets (Zip files)
+├── scripts/           # Execution scripts (Slurm & Python)
+│   ├── process_manual_cwru.py  # Data Engineering
+│   ├── run_pretrain.sh         # Pre-training Job
+│   ├── run_finetune.sh         # Fine-tuning Job
+│   └── evaluate.py             # Confusion Matrix Generation
 ├── src/
-│   ├── data/
-│   │   └── industrial_dataset.py
-│   │
-│   └── mymoment/
-│       └── model/
-│           ├── moment.py
-│           ├── layers.py
-│           ├── masking.py
-│           └── outputs.py
-│
-├── training/
-│   └── pretrain.py
-│
-├── README.md
+│   ├── data/          # Dataset Classes (NpyDataset, SupervisedDataset)
+│   ├── mymoment/      # Model Architecture (Backbone, Heads)
+│   └── training/      # Training Loops (Pretrain, Finetune)
+└── README.md
 ```
 
----
+## Usage Pipeline
 
-## 3. Dataset support
+### 1. Environment Setup
 
-### Supported Data
-The pipeline uses `phmd` to access validated industrial datasets. The loader automatically handles missing datasets by substituting them with equivalent open-source alternatives:
-
-- **Bearing Data:** CWRU, XJTU-SY, MFPT (substitute for SLIET)
-- **Gear Data:** KAUG17 (substitute for SMU), HSG18 (substitute for QPZZ)
-
-### Using your own data
-The file `industrial_dataset.py` is extensible. It expects data in the format:
-- **Timeseries:** `[Channels, Seq_Len]` (Float)
-- **Input Mask:** `[Seq_Len]` (Long, 1=observed, 0=padding)
-
----
-
-## 4. Model overview (MOMENT)
-
-The model in `moment.py` consists of:
-
-1. **RevIN normalization**
- - Per-sample normalization to handle distribution shift
-2. **Patch-based tokenizer**
- - Splits the signal into patches of length `P`
-3. **Patch embedding**
- - Linear projection + optional positional encoding
-4. **Transformer encoder**
- - HuggingFace T5 encoder (encoder-only)
-5. **Pretraining head**
- - Projects embeddings back to time-domain patches
-
-The model only supports **pretraining** (by design).
-
----
-
-## 5. Masking strategy (critical)
-
-Implemented in `masking.py`.
-
-This is **not random masking**.
-
-Instead:
-- All patches are visible **except the last observed patch**
-- The last patch is the **only prediction target**
-- Padding (if any) is automatically excluded
-
-This exactly matches the RmGPT objective:
-> Predict the next signal token using the previous tokens as context.
-
----
-
-## 6. Training objective
-
-## 6. Training objective
-
-During training:
-
-- Loss is computed using **MSE**.
-- Loss is applied **only to the masked region** (the target patch).
-- Context patches do not contribute to the loss.
-
-Mathematically:
-```python
-loss = (MSE(reconstruction, input) * target_mask).sum() / target_mask.sum()
+``` bash
+conda activate moment_env_py311
+export PYTHONPATH=$PYTHONPATH:.
 ```
-Where `target_mask` identifies only the last patch of the sequence.
 
----
+### 2. Data Engineering
 
-## 7. Pretraining configuration
+Raw CWRU `.mat` files are manually processed to generate standardized
+`.npy` tensors with shape `[2, 2048]`.
 
-Hyperparameters are aligned with RmGPT Table III:
+``` bash
+python scripts/process_manual_cwru.py
+```
 
-| Parameter            | Value | Description |
-|---------------------|-------|-------------|
-| Patch length (P)    | 256   | Length of each token |
-| Stride (S)          | 256   | Non-overlapping patches |
-| Context patches     | 7     | Visible history |
-| Target patches      | 1     | Masked future |
-| Sequence length     | 2048  | Total window size (8 * 256) |
-| Epochs              | 20    | Pretraining duration |
+**Output:**\
+Generates `X.npy` and `y.npy` in `dataset_storage/labeled_data/CWRU/`.
 
----
+### 3. Self-Supervised Pre-Training (Stage 1)
 
-## 8. What this implementation does NOT include (by design)
+Trains the model to reconstruct masked signals, learning vibration
+physics without labels.
 
-This repository intentionally excludes:
+``` bash
+sbatch scripts/run_pretrain.sh
+```
 
-- Fine-tuning heads (classification, RUL, fault diagnosis)
-- Evaluation scripts
-- Logging frameworks (wandb, tensorboard)
-- Multi-task objectives
-- Distributed training boilerplate
+**Output:**\
+`checkpoints/rmgpt_pretrain_final.pth`
 
-The focus is **clarity and correctness**, not feature completeness.
+### 4. Supervised Fine-Tuning (Stage 2)
 
----
+Loads the pre-trained backbone and trains a classification head for
+fault diagnosis.
 
-## 9. Dependencies
+``` bash
+sbatch scripts/run_finetune.sh
+```
 
-Minimal required dependencies:
-- Python ≥ 3.9
-- PyTorch
-- transformers
-- phmd
-- numpy
+**Output:**\
+`checkpoints/rmgpt_finetune_best.pth` (highest validation accuracy)
 
-Optional:
-- CUDA for GPU training
+### 5. Evaluation
+
+Generates a confusion matrix and classification report.
+
+``` bash
+python scripts/evaluate.py
+```
+
+**Output:**\
+`results/confusion_matrix.png`
+
+## Results Summary
+
+**Experiment:** CWRU Fault Diagnosis (14 Classes)
+
+-   Pre-training loss converged to \~0.005
+-   Fine-tuning accuracy:
+    -   Train: 100.00%
+    -   Validation: \~98.3%
+
+The model successfully distinguishes between normal states, inner race,
+ball, and outer race faults across different severities (0.007", 0.014",
+0.021").
+
+## Requirements
+
+-   Python 3.11+
+-   PyTorch 2.0+ (CUDA supported)
+-   HuggingFace Transformers
+-   SciPy, NumPy, Pandas, scikit-learn

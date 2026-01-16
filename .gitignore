@@ -1,0 +1,47 @@
+# --- Python & Environment ---
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.env
+.venv/
+env/
+venv/
+*.egg-info/
+.DS_Store
+
+# --- IDEs ---
+.vscode/
+.idea/
+
+# --- Slurm / HPC Logs ---
+logs/
+*.out
+*.err
+slurm-*.out
+
+# --- Data ---
+# Specific storage folder
+dataset_storage/
+# Temporary phmd links
+temp_phmd_env/
+
+/data/
+downloads/
+*.zip
+*.tar.gz
+*.h5
+*.mat
+*.npy
+
+# --- Checkpoints & Models ---
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+models/
+
+# --- Project Specific (Generated files) ---
+# Evaluation results (plots, reports)
+results/
+temp/
